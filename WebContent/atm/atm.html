@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>ATM</title>
+<link rel="shortcut icon" href="../images/favicon.ico">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../js/jquery.js"></script>
+<script src="../js/string.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+</head>
+<body>
+	<div class="container col-md-4 col-md-offset-4">
+		<ul class="nav nav-pills nav-tabs">
+			<li><a href="/Bank42/"><span class="glyphicon glyphicon-tasks"></span> &nbsp;Main Menu</a></li>
+		</ul>
+	</div>
+	
+	<br>
+	<br>
+	<br>
+
+	<div class="container col-md-4 col-md-offset-4">
+		<!--  Center panel -->
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3>Authentication required</h3>
+			</div>
+			<div id="responseAlert"></div>
+
+
+			<div class="row col-md-offset-1">
+				<!--  Offset of account field -->
+				<br>
+				<div class="form-group col-lg-8">
+					<!--  size of account field -->
+					<label for="inputAccount">Account Number</label> <input class="form-control" id="accountIn" placeholder="Enter account number" maxlength="12">
+				</div>
+			</div>
+			<div class="row col-md-offset-1">
+				<div class="form-group col-lg-4">
+					<label for="inputPin">PIN</label> <input type="password" class="form-control" id="pinIn" placeholder="Enter PIN" maxlength="4">
+				</div>
+			</div>
+			<div class="row col-md-offset-1">
+				<div class="form-group col-lg-4">
+					<label for="inputPin">Zip Code</label> <input class="form-control" id="zipIn" placeholder="Enter Zip" maxlength="10">
+				</div>
+			</div>
+
+			<div class="row col-md-offset-1">
+				<div class="form-group col-lg-5">
+					<label for="inputPin">One-time password (OTP)</label>
+					<div class="input-group">
+						<input class="form-control" id="otpIn" placeholder="Enter OTP" maxlength="10"> <span class="input-group-btn">
+							<button id="help" type="button" class="btn btn-default" data-container="body" data-toggle="popover" data-placement="right"
+								data-content="Your OTP gives you two-factor authentication for your bank account.">
+								<span class="glyphicon glyphicon-question-sign"></span>
+							</button>
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="row col-md-offset-1">
+				<div class="form-group col-lg-4">
+					<button id="submit" data-loading-text="Logging in..." class="btn btn-large btn-primary">
+						Log In &nbsp; <span class="glyphicon glyphicon-log-in"></span>
+					</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+
+	<script>
+		$("#help").popover();
+		$(document).ready(function() {
+
+			$("#submit").click(function() {
+				var btn = $(this);
+				btn.button('loading');
+				console.log("Clicked!");
+
+				var accountIn = $("#accountIn").val();
+				var pinIn = $("#pinIn").val();
+				var zipIn = $("#zipIn").val();
+				var otpIn = $("#otpIn").val(); // might be blank
+
+				if (!(S(accountIn).isNumeric() && accountIn.length === 12)) {
+					var msg = "Invalid account! Enter 12 numeric values.";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!S(pinIn).isNumeric() || pinIn.length != 4) {
+					var msg = "Enter 4-number pin!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!S(zipIn).isNumeric() || zipIn.length == 0) {
+					var msg = "Enter numeric zip code!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				}
+
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/ATM',
+					data : {
+						account : accountIn,
+						pin : pinIn,
+						zip : zipIn,
+						otp : otpIn
+					},
+					statusCode : {
+						200 : function() {
+							console.log("Success!");
+							//window.open("menu.html?account=" + $("#accountIn").val(), "_self");
+							window.open("menu.html", "_self"); // don't even tell them the account.
+						},
+						403 : function() {
+							console.log("Fail!");
+							$("#responseAlert").attr("class", "alert alert-danger");
+							$("#responseAlert").text("Authentication Failed.");
+						}
+					}
+				}).always(function() {
+					btn.button('reset');
+				});
+			});
+		});
+	</script>
+</body>
+</html>

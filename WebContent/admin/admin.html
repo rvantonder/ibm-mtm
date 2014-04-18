@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Service Customer</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../js/jquery.js"></script>
+</head>
+<body>
+	<h1>Admin Page</h1>
+	<input id="accountIn"></input>
+	<button id="deleteAccount">Delete Account</button>
+	<br>
+	<button id="showTables">Show Tables</button>
+	<hr>
+	<table id=balanceTable border="1"></table>
+	<hr>
+	<table id=customerTable border="1"></table>
+	<hr>
+	<table id=pinTable border="1"></table>
+	<hr>
+	<table id=transTable border="1"></table>
+	<hr>
+	<table id=zbankTable border="1"></table>
+
+	<script>
+		var responseCallback = function(tableName) {
+			return function responseCallback(responseData) {
+				var lists = responseData["result"];
+				var items = [];
+
+				$.each(lists, function(i, rows) {
+					console.log("Iter " + i + "Row: " + rows);
+					if (i === 0) {
+						items.push("<thead>");
+					} else if (i === 1) {
+						items.push("<tbody>");
+					}
+					items.push("<tr>");
+					$.each(rows, function(i, v) {
+						items.push("<td>" + v + "</td>");
+					});
+					items.push("</tr>");
+
+					if (i === 0) {
+						items.push("</thead>");
+					}
+				});
+				items.push("</tbody>");
+				console.log("Items: " + items);
+				$(tableName).html(items.join());
+			}
+		}
+
+		$("#deleteAccount").click(function() {
+			var accountIn = $("#accountIn").val();
+			$.ajax({
+				type : 'GET',
+				url : "https://localhost:9443/Bank42/Admin",
+				async : false, // for multiple sql queries
+				data : {
+					action : "delete",
+					account : accountIn
+				},
+				dataType : 'json',
+				success : responseCallback('#balanceTable')
+			});
+
+		});
+
+		$("#showTables").click(function() {
+			$.ajax({
+				type : 'GET',
+				url : "https://localhost:9443/Bank42/Admin",
+				async : false, // for multiple sql queries
+				data : {
+					action : "balance",
+				},
+				dataType : 'json',
+				success : responseCallback('#balanceTable')
+			});
+			$.ajax({
+				type : 'GET',
+				url : "https://localhost:9443/Bank42/Admin",
+				async : false, // for multiple sql queries
+				data : {
+					action : "customer",
+				},
+				dataType : 'json',
+				success : responseCallback('#customerTable')
+			});
+			$.ajax({
+				type : 'GET',
+				url : "https://localhost:9443/Bank42/Admin",
+				async : false, // for multiple sql queries
+				data : {
+					action : "pin",
+				},
+				dataType : 'json',
+				success : responseCallback('#pinTable')
+			});
+			$.ajax({
+				type : 'GET',
+				url : "https://localhost:9443/Bank42/Admin",
+				async : false, // for multiple sql queries
+				data : {
+					action : "trans",
+				},
+				dataType : 'json',
+				success : responseCallback('#transTable')
+			});
+			//			$.ajax({
+			//				type : 'GET',
+			//				url : "https://localhost:9443/Bank42/Admin",
+			//				async : false, // for multiple sql queries
+			//				data : {
+			//					action : "zbank",
+			//				},
+			//				dataType : 'json',
+			//				success : responseCallback('#zbankTable')
+			//			});
+
+		});
+	</script>
+</body>
+</html>

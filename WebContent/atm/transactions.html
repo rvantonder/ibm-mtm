@@ -1,0 +1,276 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>ATM</title>
+<link rel="shortcut icon" href="../images/favicon.ico">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../js/jquery.js"></script>
+<script src="../js/string.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
+<script src="../js/highcharts.js"></script>
+<script src="../js/modules/exporting.js"></script>
+<link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+
+</head>
+<body>
+	<div class="container col-md-6 col-md-offset-3">
+		<ul class="nav nav-pills nav-tabs">
+			<li><a href="/Bank42/atm/menu.html"><span class="glyphicon glyphicon-credit-card"></span> &nbsp;Account Menu</a></li>
+			<li class="active"><a href="#"><span class="glyphicon glyphicon-stats"></span> &nbsp;Transaction History</a></li>
+			<li><a href="/Bank42/atm/atm.html"><span class="glyphicon glyphicon-log-out"></span> &nbsp; Log Out</a></li>
+		</ul>
+	</div>
+
+	<br>
+	<br>
+	<br>
+
+	<div class="container col-md-6 col-md-offset-3">
+		<div class="btn-toolbar">
+			<button type="button" id="transactions" data-loading-text="Loading..." class="btn btn-primary col-lg-3">Load Transaction History</button>
+			<button type="button" id="graph" data-loading-text="Loading..." class="btn btn-primary col-lg-3">Load Graph</button>
+
+		</div>
+	</div>
+
+	<br>
+	<br>
+
+	<div class="container col-md-6 col-md-offset-3">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3>Transaction History</h3>
+			</div>
+			<div id="responseAlert"></div>
+			<div>
+				<table id=transactionTable border="1" class="table table-bordered table-condensed">
+				</table>
+			</div>
+			<div>
+				<div id="chart" style="width: 800px; height: 400px; margin: 0 auto"></div>
+			</div>
+			<br>
+		</div>
+	</div>
+
+	<script>
+		//		var q = document.URL.split('?')[1];
+		//		var accountIn = q.split('=')[1]; // get account from server
+
+		$.ajax({
+			type : 'GET',
+			url : 'https://localhost:9443/Bank42/Menu',
+			dataType : 'text',
+			async : false,
+			success : function(responseData) {
+				console.log("Account is: " + responseData);
+				accountIn = responseData;
+			},
+			error : function(responseData) {
+				window.open("atm.html", "_self");
+				console.log("No account, you are going back");
+
+			}
+		});
+
+		$(document).ready(function() {
+			console.log("READY, accountIn value: " + accountIn);
+			// REDIRECT HERE IF NOT VALID ACCOUNT; rather use post
+			$("#accountDisplay").html(accountIn);
+
+			$("#transactions").click(function() {
+				$('#chart').html(""); // TODO set attribute
+				$('#transactionTable').html("");
+				var btn = $(this);
+				btn.button('loading');
+
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/Menu',
+					dataType : 'json',
+					data : {
+						action : "transactions",
+						account : accountIn,
+					},
+					success : function(responseData) {
+						var lists = responseData["result"];
+						var items = [];
+
+						if (S(lists).startsWith("Cannot")) {
+							$("#responseAlert").attr("class", "alert alert-danger");
+							$("#responseAlert").text("Account Inactive. Cannot display transactions.");
+							btn.button('reset');
+							return;
+						} else {
+							$("#responseAlert").attr("class", "");
+							$("#responseAlert").text("");
+						}
+
+						//console.log("lists: " + lists);
+
+						$.each(lists, function(i, rows) {
+							// console.log("Iter " + i + "Row: " + rows);
+							if (i === 0) {
+								items.push("<thead>");
+								console.log("Value of row 0:" + rows[0] + " " + rows[1] + " " + rows[2]);
+								rows[0] = "<strong>Account</strong>";
+								rows[1] = "<strong>Amount</strong>";
+								rows[2] = "<strong>Transaction Type</strong>";
+								rows[3] = "<strong>Start time of Transaction</strong>";
+								rows[4] = "<strong>End time of Transaction</strong>";
+							} else if (i === 1) { // split date
+								items.push("<tbody>");
+								x = rows[3].indexOf(".");
+								rows[3] = rows[3].substring(0, x);
+								x = rows[4].indexOf(".");
+								rows[4] = rows[4].substring(0, x);
+							} else { // split date
+								x = rows[3].indexOf(".");
+								rows[3] = rows[3].substring(0, x);
+								x = rows[4].indexOf(".");
+								rows[4] = rows[4].substring(0, x);
+							}
+
+							var tmpItems = [];
+							var rowClass = "danger";
+							$.each(rows, function(i, v) {
+								//console.log("Value of v: " + v + "?" + (v === "D"));
+								if (v == "D") {
+									rowClass = "success"; // deposit = Green 
+								}
+
+								//console.log("Row class: " + rowClass);
+								tmpItems.push("<td>" + v + "</td>");
+							});
+
+							if (i === 0) {
+								rowClass = "info";
+							}
+
+							items.push("<tr class=" + rowClass + ">");
+							items.push.apply(items, tmpItems);
+							items.push("</tr>");
+
+							if (i === 0) {
+								items.push("</thead>");
+							}
+						});
+						items.push("</tbody>");
+						console.log("Items: " + items);
+						$('#transactionTable').html(items.join());
+					}
+				}).always(function() {
+					btn.button('reset');
+					$("#chart").attr("style", "width: 0px; height: 0px");
+				});
+			});
+
+			function populateGraph(responseData) {
+				var lists = responseData["result"];
+				var depositItems = [];
+				var withdrawalItems = [];
+
+				// format : [ [ Date.UTC(1970, 9, 27), 0 ], [ Date.UTC(1970, 9, 27), 0 ]...]
+
+				if (S(lists).startsWith("Cannot")) {
+					$('#chart').html(""); // TODO set attribute
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text("Account Inactive. Cannot display transactions.");
+					return;
+				} else {
+					$("#responseAlert").attr("class", "");
+					$("#responseAlert").text("");
+				}
+
+				$.each(lists, function(i, rows) {
+					// console.log("Iter " + i + "Row: " + rows);
+					if (i != 0) {
+
+						amount = rows[1];
+						type = rows[2];
+						dateComplete = rows[4];
+
+						var t = dateComplete.split(/[- :]/);
+						var d = Date.UTC(1970, t[1] - 1, t[2], t[3], t[4]);
+						if (type == "D") {
+							depositItems.push([ d, parseInt(amount) ]); // TODO parseInt necessary?
+						} else {
+							withdrawalItems.push([ d, parseInt(amount) ]);
+						}
+
+					}
+				});
+
+				console.log("DEPOSIT ITEMS:" + depositItems);
+
+				$('#chart').highcharts({
+					chart : {
+						type : 'line'
+					},
+					title : {
+						text : 'Transaction History'
+					},
+					subtitle : {
+						text : ''
+					},
+					xAxis : {
+						type : 'datetime',
+						dateTimeLabelFormats : { // don't display the dummy year
+							month : '%e. %b',
+							year : '%b'
+						}
+					},
+					yAxis : {
+						title : {
+							text : 'Amount ($)'
+						},
+						min : 0
+					},
+					tooltip : {
+						formatter : function() {
+							return '<b>' + this.series.name + '</b><br/>' + Highcharts.dateFormat('%e. %b %H:%M', this.x) + '<br/> $' + this.y;
+						}
+					},
+
+					series : [ {
+						name : 'Deposit',
+						color : '#009900',
+						data : depositItems
+					}, {
+						name : 'Withdrawal',
+						color : '#990000',
+						data : withdrawalItems
+					}, ]
+
+				});
+
+			}
+
+			$("#graph").click(function() {
+				var btn = $(this);
+				btn.button('loading');
+
+				$("#chart").attr("style", "width: 800px; height: 400px; margin: 0 auto");
+
+				$(function() {
+					$('#transactionTable').html("");
+
+					$.ajax({
+						type : 'POST',
+						url : 'https://localhost:9443/Bank42/Menu',
+						dataType : 'json',
+						data : {
+							action : "transactions",
+							account : accountIn,
+						},
+						success : populateGraph
+					}).always(function() {
+						btn.button('reset');
+					});
+
+				})
+			});
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Main Menu</title>
+<link rel="shortcut icon" href="images/favicon.ico" >
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="js/jquery.js"></script>
+<script src="bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+
+</head>
+<body>
+	<br>
+	<div class="container col-md-4 col-md-offset-4">
+		<!--  Center panel -->
+		<div class="panel panel-primary">
+		
+			<div class="panel-heading">
+				<h1 align="center">Bank42</h1>		<h3>Application Selection</h3>
+			</div>
+			<br>
+			<div class="col-md-offset-1">
+				<div class="btn-toolbar">
+
+					<button id="atm" class="btn btn-large btn-primary">
+						<span class="glyphicon glyphicon-star"></span> &nbsp; ATM
+					</button>
+					<br> <br>
+
+					<button id="new" class="btn btn-large btn-primary">
+						<span class="glyphicon glyphicon-plus"></span> &nbsp; New Customer
+					</button>
+					<br> <br>
+
+					<button id="service" class="btn btn-large btn-primary">
+						<span class="glyphicon glyphicon-wrench"></span> &nbsp; Service Account
+					</button>
+
+					<br> <br>
+
+				</div>
+			</div>
+		</div>
+
+		<script>
+			$(document).ready(function() {
+				$("#atm").click(function() {
+					window.open("atm/atm.html", "_self");
+				});
+				$("#new").click(function() {
+					window.open("create/create.html", "_self");
+				});
+				$("#service").click(function() {
+					window.open("service/service.html", "_self");
+				});
+				$("#administration").click(function() {
+					window.open("admin/admin.html", "_self");
+				});
+			});
+		</script>
+</body>
+</html>

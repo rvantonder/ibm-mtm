@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>ATM</title>
+<link rel="shortcut icon" href="../images/favicon.ico">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../js/jquery.js"></script>
+<script src="../js/string.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+
+</head>
+<body>
+
+
+	<div class="container col-md-6 col-md-offset-3">
+		<ul class="nav nav-pills nav-tabs">
+			<li class="active"><a href="#"><span class="glyphicon glyphicon-credit-card"></span> &nbsp; Account Menu</a></li>
+			<li><a href="/Bank42/atm/transactions.html"><span class="glyphicon glyphicon-stats"></span> &nbsp; Transaction History</a></li>
+			<li><a href="/Bank42/atm/atm.html"><span class="glyphicon glyphicon-log-out"></span> &nbsp; Log Out</a></li>
+		</ul>
+	</div>
+	<br>
+	<br>
+	<br>
+	<div class="container col-md-6 col-md-offset-3">
+		<!--  Center panel -->
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3>ATM Menu</h3>
+			</div>
+			<div id="responseAlert"></div>
+<br>
+			<div class="col-md-offset-1">
+				<label for="inputAccount">Account Number</label>
+			</div>
+
+			<div id="accountDisplay" class="col-md-offset-2"></div>
+			<br>
+			<div class="col-md-offset-1">
+				<label for="inputAccount">Enter Amount</label>
+			</div>
+
+			<div class="input-group col-lg-6 col-md-offset-2">
+				<span class="input-group-addon">$</span> <input type="text" class="form-control" id="amount"></input>
+			</div>
+
+
+			<br>
+			<div class="col-md-offset-1">
+				<div class="btn-toolbar">
+					<button id="withdrawal" type="button" data-loading-text="Please wait..." class="btn btn-primary">Withdraw</button>
+					<button id="deposit" type="button" data-loading-text="Please wait..." class="btn btn-primary">Deposit</button>
+					<button id="balance" type="button" data-loading-text="Please wait..." class="btn btn-primary col-lg-3">Check Balance</button>
+				</div>
+			</div>
+
+			<div></div>
+
+			<br>
+		</div>
+	</div>
+
+	<script>
+		//		var q = document.URL.split('?')[1];
+		//		var accountIn = q.split('=')[1]; // get account from server
+
+		$.ajax({
+			type : 'GET',
+			url : 'https://localhost:9443/Bank42/Menu',
+			async : false,
+			success : function(responseData) {
+				console.log("Account is: " + responseData);
+				accountIn = responseData;
+			},
+			error : function(responseData) {
+				window.open("atm.html", "_self");
+				console.log("No account, you are going back");
+
+			}
+		});
+
+		$(document).ready(function() {
+			console.log("READY, accountIn value: " + accountIn);
+			// REDIRECT HERE IF NOT VALID ACCOUNT; rather use post
+			$("#accountDisplay").html(accountIn);
+
+			$("#balance").click(function() {
+				var btn = $(this);
+				btn.button('loading');
+				$("#withdrawal").prop('disabled', true);
+				$("#deposit").prop('disabled', true);
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/Menu',
+					data : {
+						action : "check",
+						account : accountIn
+					},
+					success : function(responseData) {
+						$("#responseAlert").attr("class", "alert alert-success");
+						$("#responseAlert").text(responseData);
+					}
+				}).always(function() {
+					btn.button('reset');
+					$("#deposit").prop('disabled', false);
+					$("#withdrawal").prop('disabled', false);
+				});
+			});
+
+			$("#withdrawal").click(function() {
+				var amount = $("#amount").val();
+				var btn = $(this);
+				btn.button('loading');
+				$("#balance").prop('disabled', true);
+				$("#deposit").prop('disabled', true);
+
+				console.log("Verifying amount: " + amount);
+
+				var parsedAmount = parseFloat(amount);
+				var parsedAmountLength = parsedAmount.toString().length;
+				var originalLength = amount.length;
+				var sameLengthTest = originalLength === parsedAmountLength;
+
+				console.log("Length parsed amount: " + parsedAmount.toString().length);
+				console.log("Length string amount: " + amount.length);
+
+				if (!sameLengthTest || amount.length === 0 || !(S(amount).isNumeric())) {
+					var msg = "Enter a number!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+
+					btn.button('reset');
+					$("#deposit").prop('disabled', false);
+					$("#balance").prop('disabled', false);
+					return;
+				}
+
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/Menu',
+					data : {
+						action : "withdrawal",
+						account : accountIn,
+						amount : $("#amount").val()
+					},
+					success : function(responseData) {
+						if (S(responseData).startsWith("Cannot") || S(responseData).startsWith("Cancelled")) {
+							$("#responseAlert").attr("class", "alert alert-danger");
+							$("#responseAlert").text(responseData);
+						} else {
+							$("#responseAlert").attr("class", "alert alert-success");
+							$("#responseAlert").text(responseData);
+						}
+					}
+				}).always(function() {
+					btn.button('reset');
+					$("#deposit").prop('disabled', false);
+					$("#balance").prop('disabled', false);
+				});
+			});
+			$("#deposit").click(function() {
+				var btn = $(this);
+				btn.button('loading');
+				$("#balance").prop('disabled', true);
+				$("#withdrawal").prop('disabled', true);
+
+				var amount = $("#amount").val();
+
+				var parsedAmount = parseFloat(amount);
+				var parsedAmountLength = parsedAmount.toString().length;
+				var originalLength = amount.length;
+				var sameLengthTest = originalLength === parsedAmountLength;
+
+				console.log("Length parsed amount: " + parsedAmount.toString().length);
+				console.log("Length string amount: " + amount.length);
+
+				if (!sameLengthTest || amount.length === 0 || !(S(amount).isNumeric())) {
+					var msg = "Enter a number!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+
+					btn.button('reset');
+					$("#withdrawal").prop('disabled', false);
+					$("#balance").prop('disabled', false);
+					return;
+				}
+
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/Menu',
+					data : {
+						action : "deposit",
+						account : accountIn,
+						amount : $("#amount").val()
+					},
+					success : function(responseData) {
+						if (S(responseData).startsWith("Cannot")) {
+							$("#responseAlert").attr("class", "alert alert-danger");
+							$("#responseAlert").text(responseData);
+						} else {
+							$("#responseAlert").attr("class", "alert alert-success");
+							$("#responseAlert").text(responseData);
+						}
+					}
+				}).always(function() {
+					btn.button('reset');
+					$("#withdrawal").prop('disabled', false);
+					$("#balance").prop('disabled', false);
+				});
+			});
+		});
+	</script>
+</body>
+</html>

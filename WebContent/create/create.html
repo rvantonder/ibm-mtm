@@ -1,0 +1,185 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Create New Customer</title>
+<link rel="shortcut icon" href="../images/favicon.ico">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script src="../js/jquery.js"></script>
+<script src="../js/string.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+
+</head>
+<body>
+	<div class="container col-md-6 col-md-offset-3">
+		<ul class="nav nav-pills nav-tabs">
+			<li><a href="/Bank42/"><span class="glyphicon glyphicon-tasks"></span> &nbsp;Main Menu</a></li>
+		</ul>
+	</div>
+	
+	<br>
+	<br>
+	<br>
+	
+	<div class="container col-md-6 col-md-offset-3">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3>Create New Customer</h3>
+			</div>
+			<div id="responseAlert"></div>
+<br>
+			<div class="row col-md-offset-1">
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">Last Name</label> <input id="lastNameIn" type="text" class="form-control" maxlength="12"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">First Name</label> <input id="firstNameIn" type="text" class="form-control" maxlength="12"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">Street Address</label> <input id="streetIn" type="text" class="form-control"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">City</label> <input id="cityIn" type="text" class="form-control" maxlength="12"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">State</label> <input id="stateIn" type="text" class="form-control" maxlength="2"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">Account Number</label> <input id="accountIn" type="text" class="form-control" maxlength="12"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">Pin</label> <input id="pinIn" type="password" class="form-control" maxlength="4"></input>
+				</div>
+
+				<div class="form-group col-lg-8">
+					<label for="inputAccount">Deposit Amount</label>
+					<div class="input-group col-lg-12">
+						<span class="input-group-addon">$</span> <input id="depositIn" type="text" class="form-control" maxlength="12"></input>
+					</div>
+					<br>
+					<div class="col-md-offset-1"></div>
+					<div class="btn-toolbar">
+						<button id="submitBtn" data-loading-text="Submitting..." class="btn btn-primary">Submit</button>
+						<button id="clearBtn" class="btn btn-warning">Clear All</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+
+
+	<script>
+		$(document).ready(function() {
+
+			$("#clearBtn").click(function() {
+				$("#lastNameIn").val("");
+				$("#firstNameIn").val("");
+				$("#streetIn").val("");
+				$("#cityIn").val("");
+				$("#stateIn").val("");
+				$("#accountIn").val("");
+				$("#pinIn").val("");
+				$("#depositIn").val("");
+			});
+
+			$("#submitBtn").click(function() {
+				var btn = $(this);
+				btn.button('loading');
+
+				lastNameIn = $("#lastNameIn").val();
+				firstNameIn = $("#firstNameIn").val();
+				streetIn = $("#streetIn").val();
+				cityIn = $("#cityIn").val();
+				stateIn = $("#stateIn").val();
+				accountIn = $("#accountIn").val();
+				pinIn = $("#pinIn").val();
+				depositIn = $("#depositIn").val();
+
+				if (S(lastNameIn).match(/[^\sa-zA-Z]/) || lastNameIn.length == 0) {
+					var msg = "Enter alphabetic last name!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (S(firstNameIn).match(/[^\sa-zA-Z]/) || firstNameIn.length == 0) {
+					var msg = "Enter alphabetic first name!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (S(streetIn).match(/[^\s0-9a-zA-Z]/) || streetIn.length == 0) {
+					var msg = "Enter alpha-numeric street name!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (S(cityIn).match(/[^\sa-zA-Z]/) || cityIn.length == 0) {
+					var msg = "Enter alphabetic city name!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!(S(stateIn).isAlpha()) || stateIn.length == 0) {
+					var msg = "Enter alphabetic state name!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!(S(accountIn).isNumeric()) || accountIn.length != 12) {
+					var msg = "Enter 12-number account!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!(S(pinIn).isNumeric()) || pinIn.length != 4) {
+					var msg = "Enter 4-number pin!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				} else if (!(S(depositIn).isNumeric()) || depositIn.length == 0) {
+					var msg = "Enter numeric deposit amount!";
+					$("#responseAlert").attr("class", "alert alert-danger");
+					$("#responseAlert").text(msg);
+					btn.button('reset');
+					return;
+				}
+
+				$.ajax({
+					type : 'POST',
+					url : 'https://localhost:9443/Bank42/Create',
+					data : {
+						lastName : $("#lastNameIn").val(),
+						firstName : $("#firstNameIn").val(),
+						street : $("#streetIn").val(),
+						city : $("#cityIn").val(),
+						state : $("#stateIn").val(),
+						account : $("#accountIn").val(),
+						pin : $("#pinIn").val(),
+						deposit : $("#depositIn").val()
+					},
+					success : function(responseData) {
+						if (S(responseData).startsWith("Unable")) {
+							$("#responseAlert").attr("class", "alert alert-danger");
+							$("#responseAlert").text(responseData);
+						} else {
+							$("#responseAlert").attr("class", "alert alert-success");
+							$("#responseAlert").text(responseData);
+						}
+					}
+				}).always(function() {
+					btn.button('reset');
+				});
+			});
+		});
+	</script>
+</body>
+</html>
